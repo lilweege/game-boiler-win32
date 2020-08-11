@@ -12,7 +12,7 @@ const char* windowName = "Window";
 
 HBITMAP hbm = NULL;
 
-int doGameLoop(HWND hwnd, const int FRAMERATE = 120, const int MAX_FRAMESKIP = 10) {
+int doGameLoop(HWND hwnd, const int FRAMERATE = 60, const int MAX_FRAMESKIP = 10) {
 	MSG msg;
 	const int TICK_SKIP = 1000 / FRAMERATE;
 	std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
@@ -20,13 +20,13 @@ int doGameLoop(HWND hwnd, const int FRAMERATE = 120, const int MAX_FRAMESKIP = 1
 	DWORD startTick = GetTickCount(),
 		currentTick = 0,
 		nextTick = 0;
-	
+
 	int prevSecond = 0,
 		thisSecond = 0,
 		frame = 0,
 		loops;
-		
-		
+
+
 	Game game = Game(WIDTH, HEIGHT);
 	while (msg.message != WM_QUIT) {
 		// EVENT INTERRUPT
@@ -38,13 +38,13 @@ int doGameLoop(HWND hwnd, const int FRAMERATE = 120, const int MAX_FRAMESKIP = 1
 			// LIMIT FRAMERATE
 			a = std::chrono::system_clock::now();
 			std::chrono::duration<double, std::milli> work_time = a - b;
-			
+
 			if (work_time.count() < TICK_SKIP) {
 				std::chrono::duration<double, std::milli> delta_ms(TICK_SKIP - work_time.count());
 				auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
 				std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
 			}
-			
+
 			b = std::chrono::system_clock::now();
 			std::chrono::duration<double, std::milli> sleep_time = b - a;
 
@@ -57,11 +57,11 @@ int doGameLoop(HWND hwnd, const int FRAMERATE = 120, const int MAX_FRAMESKIP = 1
 				GetKeyboardState(game.keysPressed);
 				game.update(currentTick);
 				hbm = CreateBitmap(WIDTH, HEIGHT, 1, 8 * 4, (void*) game.pixels);
-				
+
 				nextTick += TICK_SKIP;
 				++loops;
 			}
-			
+
 			// RENDER
 			if (hbm) {
 				HDC hdc = GetDC(hwnd);
@@ -71,7 +71,7 @@ int doGameLoop(HWND hwnd, const int FRAMERATE = 120, const int MAX_FRAMESKIP = 1
 				DeleteDC(tmp);
 				ReleaseDC(hwnd, hdc);
 			}
-			
+
 			// FPS
 			++frame;
 			thisSecond = currentTick / 1000;
@@ -106,7 +106,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	const char* lpClassName = "windowClass";
-	
+
 	WNDCLASSEX wc;
 	wc.cbSize        = sizeof(WNDCLASSEX);
 	wc.style         = 0;
@@ -121,8 +121,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.lpszClassName = lpClassName;
 	wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
 	RegisterClassEx(&wc);
-	
-	
+
+
 	HWND hwnd;
 	hwnd = CreateWindowEx(
 		0,
@@ -130,12 +130,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		windowName,
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		WIDTH, HEIGHT,
+		WIDTH + 2 * GetSystemMetrics(SM_CXSIZEFRAME),
+		HEIGHT + 2 * GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CYCAPTION),
 		NULL, NULL, hInstance, NULL);
 	if (!hwnd)
 		return -1;
-	
-	
+
+
 	// ShowWindow(GetConsoleWindow(), SW_HIDE); // for final build
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
